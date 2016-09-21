@@ -5,8 +5,11 @@ function sqlPdo($query,$queryType,$databaseType){
         $hostname='localhost';
         $databaseUsername='root';
         $databasePassword='mayuri123#';
-        $DatabaseDriver = new PDO("mysql:host=$hostname;dbname=e_commerce",$databaseUsername,$databasePassword);
-
+        try {
+            $DatabaseDriver = new PDO("mysql:host=$hostname;dbname=e_commerce", $databaseUsername, $databasePassword);
+        }catch (Exception $e){
+            echo $e->getMessage();
+        }
 
     }
     elseif(!strcmp($databaseType,'pgsql'))
@@ -14,7 +17,20 @@ function sqlPdo($query,$queryType,$databaseType){
         $hostname='localhost';
         $databaseUsername='postgres';
         $databasePassword='mayuri123#';
-        $DatabaseDriver = new PDO("pgsql:dbname=first;host=$hostname;user=$databaseUsername;password=$databasePassword");
+        try {
+            $DatabaseDriver = new PDO("pgsql:dbname=first;host=$hostname;user=$databaseUsername;password=$databasePassword");
+        }catch (Exception $e){
+            echo $e->getMessage();
+        }
+    }
+    elseif(!strcmp($databaseType,'sqlite')){
+        try{
+            $DatabaseDriver = new PDO("sqlite:".__DIR__."/sqliteDatabase.db");
+        }
+        catch(Exception $e){
+            echo $e->getMessage();
+        }
+
     }
     $statementPrepared=$DatabaseDriver->prepare($query);
     if(!strcmp($queryType,'insert'))
@@ -29,7 +45,7 @@ function sqlPdo($query,$queryType,$databaseType){
     elseif(!strcmp($queryType,'select'))
     {
         $statementPrepared->execute();
-        $result = $statementPrepared->fetchAll(PDO::FETCH_ASSOC);
+        $result = $statementPrepared->fetchAll(PDO::FETCH_CLASS);
         if(empty($result))
         {
             return false;
@@ -53,6 +69,13 @@ if(isset($_POST['postgresql']))
     VALUES (2,'Prajakta',22,'Pune',50000)",'insert','pgsql');
     sqlpdo('select * from company','select','pgsql');
 }
+
+if(isset($_POST['sqlite']))
+{
+    sqlPdo("INSERT INTO users (id,user_name,age,address,salary)
+    VALUES (2,'Prajakta',22,'Pune',50000);",'insert','sqlite');
+    sqlpdo('select * from users','select','sqlite');
+}
 ?>
 <html>
 <head>
@@ -62,7 +85,7 @@ if(isset($_POST['postgresql']))
 <form action="index.php" method="post">
     <input type="submit" name="mysql" value="mysql"><br/>
     <input type="submit" name="postgresql" value="postgresql"><br/>
-    <input type="submit" name="mysqli" value="mysqli">
+    <input type="submit" name="sqlite" value="sqlite">
 </form>
 </body>
 </html>
